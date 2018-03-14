@@ -22,10 +22,12 @@ main() {
       "accessToken": envVars['ACCESS_TOKEN'],
       "accessSecret": envVars['ACCESS_SECRET']
     };
+    
     var twitter = new Twitter.fromMap(keyMap);
     var response = await twitter.request("GET", "statuses/user_timeline.json");
     expect(response.body,isNotNull);
   });
+
   // multiple request test #5
   test("mulitple request test",() async {
     var envVars = Platform.environment;
