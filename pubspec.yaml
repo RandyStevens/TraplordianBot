@@ -10,7 +10,6 @@ environment:
 dependencies:
   oauth: '^0.4.0'
   twitter: '^0.5.1'
-#  path: ^1.4.1
 
 dev_dependencies:
   test: ^0.12.0

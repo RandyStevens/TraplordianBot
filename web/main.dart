@@ -8,17 +8,19 @@ import 'package:twitter/twitter.dart';
 import 'twitterKeys.dart' as twitterKeys;
 
 main() async {
-  var envVars = twitterKeys.main();
-  print(envVars[0]);
-  print(envVars[1]);
-  print(envVars[2]);
-  print(envVars[3]);
+///You can use the following commented code to check what your keys are.
+//  var envVars = twitterKeys.main();
+//  print(envVars[0]);
+//  print(envVars[1]);
+//  print(envVars[2]);
+//  print(envVars[3]);
 
-  getLink();
+  ///To get started we run getLinks passing in null
+  getLinks(null);
 
 }
 
-Future getLink() async {
+dynamic getLinks(_) async {
   int i;
   List scrapeLinks = [];
   http.Response response = await http.get("https://genius.com");
@@ -30,8 +32,12 @@ Future getLink() async {
       scrapeLinks.add(link);
     }
   }
-
+  ///Generate a list of links and pass it to getLyrics
   getLyrics(scrapeLinks);
+  ///This just lets us know that we are waiting now, the function has finished
+  print('Now waiting for 4 hours');
+  ///Recursively create a new getLinks, it will wait 4 hours then run again.
+  new Future.delayed(const Duration(hours: 4), (){}).then(getLinks);
 }
 
 Future getLyrics(List scrapeLinks) async {
@@ -43,12 +49,19 @@ Future getLyrics(List scrapeLinks) async {
     }
   }
 
+  _deleteAllEms(List em) {
+    for(var b in em) {
+      b.remove();
+    }
+  }
+
   for(var link in scrapeLinks) {
     http.Response response = await http.get(link);
     Document document = parser.parse(response.body);
 
     await for (Element element in selectorStream(document, '.lyrics a')) {
         _deleteAllBreaks(element.getElementsByTagName('br'));
+        _deleteAllEms(element.getElementsByTagName('em'));
         var lyricItem = element.innerHtml;
 
         if(lyricItem.length < 140) {
@@ -56,9 +69,10 @@ Future getLyrics(List scrapeLinks) async {
         }
     }
   }
-
+  ///Shuffle the array of viable tweets and take the first one
   var tweet = (lyrics..shuffle()).first;
-  PostTweet(tweet);
+  ///Post the tweet
+  await PostTweet(tweet);
 }
 
 Stream selectorStream(Document document, String tag) async*{
@@ -73,10 +87,9 @@ Stream tagStream(Document document, String tag) async*{
   }
 }
 
-
 void PostTweet(String tweet) {
   print("Attempting to tweet: " + tweet);
-  var envVars = twitterKeys.main();
+  var envVars = twitterKeys.keys();
   var keyMap = {
     "consumerKey": envVars[0],
     "consumerSecret": envVars[1],
@@ -90,7 +103,6 @@ void PostTweet(String tweet) {
     var a = twitter.request(
       "POST",
       "statuses/update.json",
-      //Body of tweet is inserted below
       body: {"status" : tweet}
     );
       a.then((value){
